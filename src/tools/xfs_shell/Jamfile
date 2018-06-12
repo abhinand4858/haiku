@@ -1,0 +1,47 @@
+SubDir HAIKU_TOP src tools xfs_shell ;
+
+SEARCH_SOURCE += [ FDirName $(HAIKU_TOP) src add-ons kernel file_systems xfs ] ;
+
+# prevent inclusion of HaikuBuildCompatibility.h
+DEFINES += HAIKU_BUILD_COMPATIBILITY_H ;
+
+# set some additional defines
+{
+	local defines =
+		FS_SHELL
+		;
+
+	defines = [ FDefines $(defines) ] ;
+	SubDirCcFlags $(defines) -Wno-multichar ;
+	SubDirC++Flags $(defines) -Wno-multichar -fno-rtti ;
+}
+
+# platform specific libraries
+local fsShellCommandLibs ;
+if ! $(HOST_PLATFORM_BEOS_COMPATIBLE) {
+	fsShellCommandLibs = $(HOST_NETWORK_LIBS) ;
+}
+
+if ! $(HOST_PLATFORM_BEOS_COMPATIBLE) {
+	UseHeaders [ FDirName $(HAIKU_TOP) headers build os ] : true ;
+}
+
+UsePrivateHeaders shared storage fs_shell ;
+UseHeaders [ FDirName $(HAIKU_TOP) headers private ] : true ;
+UseHeaders [ FDirName $(HAIKU_TOP) src tools fs_shell ] ;
+
+local xfsSource =
+	kernel_interface.cpp
+	Volume.cpp
+;
+
+BuildPlatformMergeObject <build>xfs.o : $(xfsSource) ;
+
+BuildPlatformMain <build>xfs_shell
+	:
+	:
+	<build>xfs.o
+	<build>fs_shell.a $(HOST_LIBSUPC++) $(HOST_LIBSTDC++)
+	$(HOST_LIBROOT) $(fsShellCommandLibs)
+;
+

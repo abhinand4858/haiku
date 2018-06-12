@@ -1,0 +1,12 @@
+SubDir HAIKU_TOP src add-ons kernel file_systems xfs ;
+
+UsePrivateHeaders [ FDirName kernel util ] ;
+UsePrivateHeaders shared storage ;
+UsePrivateKernelHeaders ;
+
+KernelAddon xfs :
+    kernel_interface.cpp
+    Volume.cpp
+;
+
+
