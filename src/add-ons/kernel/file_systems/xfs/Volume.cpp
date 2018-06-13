@@ -170,6 +170,17 @@ DeviceOpener::GetSize(off_t* _size, uint32* _blockSize)
     return B_OK;
 }
 
+bool
+xfs_super_block::IsValid()
+{
+    TRACE("Magic() %" B_PRIu32 "\n", Magic());
+    TRACE("XFS_SB_MAGIC %" B_PRIu32 "\n", (int32) XFS_SB_MAGIC);
+
+    if (Magic() != (int32) XFS_SB_MAGIC)
+        return false;
+
+    return true;
+}
 
 
 Volume::Volume(fs_volume *volume)
@@ -177,7 +188,7 @@ Volume::Volume(fs_volume *volume)
         fVolume(volume)
 {
     mutex_init(&fLock, "xfs volume");
-    TRACE("Volume::Volume() : Initialising volume");
+    TRACE("Volume::Volume() : Constructor");
 }
 
 
@@ -186,40 +197,30 @@ Volume::~Volume() {
     TRACE("Volume::Destructor : Removing Volume");
 }
 
-bool
-xfs_super_block::IsValid() const
-{
-    return true;
-}
 
+bool
+Volume::IsValidSuperBlock()
+{
+    return fSuperBlock.IsValid();
+}
 
 status_t
 Volume::CheckSuperBlock(const uint8* data, uint32* _offset)
 {
-    xfs_super_block* superBlock = (xfs_super_block*)(data + 512);
-    if (superBlock->IsValid()) {
-        if (_offset != NULL)
-            *_offset = 512;
-        return B_OK;
-    }
-
-#ifndef BFS_LITTLE_ENDIAN_ONLY
-    // For PPC, the superblock might be located at offset 0
-    superBlock = (xfs_super_block*)data;
+    xfs_super_block* superBlock = (xfs_super_block*)data;
     if (superBlock->IsValid()) {
         if (_offset != NULL)
             *_offset = 0;
         return B_OK;
     }
-#endif
-
+    ERROR("Volume::CheckSuperBlock() : Invalid superblock!\n");
     return B_BAD_VALUE;
 }
+
 
 status_t
 Volume::Identify(int fd, xfs_super_block* superBlock)
 {
-    TRACE("Volume::Identify() : Identifying Volume in progress");
     uint8 buffer[1024];
     if (read_pos(fd, 0, buffer, sizeof(buffer)) != sizeof(buffer))
         return B_IO_ERROR;
@@ -242,7 +243,7 @@ Volume::Mount(const char *deviceName, uint32 flags) {
     if ((flags & B_MOUNT_READ_ONLY) != 0) {
         TRACE("Volume::Mount(): Read only\n");
     } else {
-        TRACE("Volume::Mount(): Read write\n");
+        TRACE("Volume::Mount(): Read and Write\n");
     }
 
     DeviceOpener opener(deviceName, (flags & B_MOUNT_READ_ONLY) != 0
@@ -259,12 +260,17 @@ Volume::Mount(const char *deviceName, uint32 flags) {
     // read the superblock
     status_t status = Identify(fDevice, &fSuperBlock);
     if (status != B_OK) {
-        ERROR("Invalid super block!\n");
+        ERROR("Volume::Mount(): Identify() failed\n");
         return B_BAD_VALUE;
     }
 
     // initialize short hands to the superblock (to save byte swapping)
     fBlockSize = fSuperBlock.BlockSize();
+    TRACE("block size %" B_PRIu32 "\n", fBlockSize);
+
+    TRACE("No of blocks for data and metadata: %" B_PRIu64 "\n", fSuperBlock.NumBlocks());
+
+    TRACE("Log start: %" B_PRIu64 "\n", fSuperBlock.LogStart());
 
     // check if the device size is large enough to hold the file system
     off_t diskSize;

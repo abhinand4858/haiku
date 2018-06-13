@@ -23,7 +23,7 @@ struct xfs_super_block {
     xfs_ino_t         rbmino;
     xfs_ino_t         rsumino;
     uint32            rextsize;
-    uint              agblocks;
+    uint32            agblocks;
     uint32            agcount;
     uint32            rbmblocks;
     uint32            logblocks;
@@ -58,12 +58,20 @@ struct xfs_super_block {
     uint32            logsunit;
     uint32            features2;
 
-    uint32 BlockSize() const { return B_LENDIAN_TO_HOST_INT32(blocksize); }
-    off_t NumBlocks() const { return B_LENDIAN_TO_HOST_INT64(dblocks); }
-
+    uint32      Magic() const { return B_HOST_TO_BENDIAN_INT32(magicnum); }
+    uint32      BlockSize() const { return B_HOST_TO_BENDIAN_INT32(blocksize); }
+    uint64      NumBlocks() const { return B_HOST_TO_BENDIAN_INT64(dblocks); }
+    uint64      LogStart() const { return B_HOST_TO_BENDIAN_INT64(logstart); }
+    xfs_ino_t   Root() const { return B_HOST_TO_BENDIAN_INT64(rootino); }
+    uint32      BlocksPerAllocationGroup() const { return B_HOST_TO_BENDIAN_INT64(agblocks); }
+    uint32      AllocationGroups() const { return B_HOST_TO_BENDIAN_INT64(agcount); }
+    uint16      SectorSize() const { return B_HOST_TO_BENDIAN_INT64(sectsize); }
+    uint16      InodeSize() const { return B_HOST_TO_BENDIAN_INT64(inodesize); }
+    uint64      InodeTotalCount() const { return B_HOST_TO_BENDIAN_INT64(icount); }
+    uint64      InodeFreeCount() const { return B_HOST_TO_BENDIAN_INT64(ifree); }
 
     // implemented in Volume.cpp:
-    bool IsValid() const;
+    bool IsValid();
 } _PACKED;
 
 #endif /*XFS_H*/

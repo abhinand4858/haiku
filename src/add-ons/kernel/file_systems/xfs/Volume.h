@@ -18,6 +18,9 @@ public:
 			status_t		Mount(const char* device, uint32 flags);
 			status_t		Unmount();
 
+            bool            IsValidSuperBlock();
+            bool			IsInitializing() const { return fVolume == NULL; }
+
 			dev_t			ID() const { return fVolume ? fVolume->id : -1; }
 			fs_volume*		FSVolume() const { return fVolume; }
             const char*		Name() const { return fSuperBlock.fname; }
@@ -31,11 +34,11 @@ public:
             off_t			NumBlocks() const
                                 { return fSuperBlock.NumBlocks(); }
 
-            off_t          Root() const { return fSuperBlock.rootino; }
+            xfs_ino_t       Root() const { return fSuperBlock.rootino; }
 
-            static	status_t		CheckSuperBlock(const uint8* data,
+            static	status_t	CheckSuperBlock(const uint8* data,
                                         uint32* _offset = NULL);
-            static	status_t		Identify(int fd, xfs_super_block* superBlock);
+            static	status_t	Identify(int fd, xfs_super_block* superBlock);
 
 protected:
 			fs_volume*      fVolume;
