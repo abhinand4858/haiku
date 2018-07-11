@@ -6,13 +6,13 @@
 #	include <util/fs_trim_support.h>
 #endif
 
-#define TRACE_BTRFS
-#ifdef TRACE_BTRFS
+#define TRACE_XFS
+#ifdef TRACE_XFS
 #	define TRACE(x...) dprintf("\n\33[34mxfs:\33[0m " x)
 #else
 #	define TRACE(x...) ;
 #endif
-#define ERROR(x...) dprintf("\n\33[34mxfs:\33[0m " x)
+
 
 
 fs_volume_ops gXFSVolumeOps = {
@@ -77,7 +77,6 @@ xfs_mount(fs_volume* _volume, const char* device, uint32 flags,
     if (status != B_OK) {
         delete volume;
         TRACE("ERROR in Volume::Mount()");
-        //ERROR(status);
     }
 
     _volume->private_volume = volume;

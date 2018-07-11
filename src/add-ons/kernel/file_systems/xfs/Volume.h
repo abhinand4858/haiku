@@ -35,6 +35,7 @@ public:
                                 { return fSuperBlock.NumBlocks(); }
 
             xfs_ino_t       Root() const { return fSuperBlock.rootino; }
+            Inode*			        RootNode() const { return fRootNode; }
 
             static	status_t	CheckSuperBlock(const uint8* data,
                                         uint32* _offset = NULL);
@@ -51,6 +52,7 @@ protected:
 			mutex			fLock;
 
 			uint32			fFlags;
+            Inode*		    fRootNode;
 };
 
 

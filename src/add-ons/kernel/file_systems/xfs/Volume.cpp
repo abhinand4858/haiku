@@ -1,13 +1,12 @@
 
 #include "Volume.h"
 
-#define TRACE_BTRFS
-#ifdef TRACE_BTRFS
+#define TRACE_XFS
+#ifdef TRACE_XFS
 #	define TRACE(x...) dprintf("\n\33[34mxfs:\33[0m " x)
 #else
 #	define TRACE(x...) ;
 #endif
-#define ERROR(x...) dprintf("\n\33[34mxfs:\33[0m " x)
 
 
 class DeviceOpener {
@@ -213,7 +212,7 @@ Volume::CheckSuperBlock(const uint8* data, uint32* _offset)
             *_offset = 0;
         return B_OK;
     }
-    ERROR("Volume::CheckSuperBlock() : Invalid superblock!\n");
+    TRACE("Volume::CheckSuperBlock() : Invalid superblock!\n");
     return B_BAD_VALUE;
 }
 
@@ -250,7 +249,7 @@ Volume::Mount(const char *deviceName, uint32 flags) {
                                     ? O_RDONLY : O_RDWR);
     fDevice = opener.Device();
     if (fDevice < B_OK) {
-        ERROR("Volume::Mount(): couldn't open device\n");
+        TRACE("Volume::Mount(): couldn't open device\n");
         return fDevice;
     }
 
@@ -260,7 +259,7 @@ Volume::Mount(const char *deviceName, uint32 flags) {
     // read the superblock
     status_t status = Identify(fDevice, &fSuperBlock);
     if (status != B_OK) {
-        ERROR("Volume::Mount(): Identify() failed\n");
+        TRACE("Volume::Mount(): Identify() failed\n");
         return B_BAD_VALUE;
     }
 
@@ -275,12 +274,12 @@ Volume::Mount(const char *deviceName, uint32 flags) {
     // check if the device size is large enough to hold the file system
     off_t diskSize;
     if (opener.GetSize(&diskSize) != B_OK) {
-        ERROR("Volume:Mount() Unable to get diskSize");
+        TRACE("Volume:Mount() Unable to get diskSize");
         return B_ERROR;
     }
     //check the condition here
     /*if (diskSize < ) {
-        ERROR("Device size is not large enough to hold the filesystem");
+        TRACE("Device size is not large enough to hold the filesystem");
         return B_BAD_VALUE;
     }*/
 
